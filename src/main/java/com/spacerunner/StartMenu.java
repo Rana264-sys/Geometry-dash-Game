@@ -8,18 +8,17 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 
-/**
- * The full-screen start overlay. Extracted from GameMain's
- * createStartMenu(). The Runnable passed in is exactly the same
- * "on start" behavior GameMain's button lambda used to run inline.
- */
+// The start screen shown before the game begins. It shows the title,
+// instructions, and a button to start playing.
 public class StartMenu extends VBox {
 
+    // Builds the start screen. onStart runs when the player clicks the button.
     public StartMenu(int width, int height, Runnable onStart) {
-        super(30); 
+        super(30); // 30 pixels of spacing between elements
         setAlignment(Pos.CENTER);
         setPrefSize(width, height);
 
+        // Semi-transparent black background overlay
         setStyle("-fx-background-color: rgba(0, 0, 0, 0.75);");
 
         // Title
@@ -28,12 +27,12 @@ public class StartMenu extends VBox {
         title.setFill(Color.WHITE);
 
         // Instructions
-        Text instructions = new Text("MISSION BRIEFING:\n\nPress SPACE/UP to fire thrusters.\nCollect Oxygen to survive.\nAvoid incoming space debris.");
+        Text instructions = new Text("MISSION BRIEFING:\n\nPress SPACE to fire thrusters.\nCollect Oxygen to survive.\nAvoid incoming space debris.");
         instructions.setFont(Font.font("Consolas", 20));
         instructions.setFill(Color.LIGHTGRAY);
         instructions.setTextAlignment(TextAlignment.CENTER);
 
-        // Ghost Button
+        // Minimalist Ghost Button
         Button startBtn = new Button("START LAUNCH");
         startBtn.setFont(Font.font("Consolas", 24));
         startBtn.setStyle(
@@ -49,10 +48,10 @@ public class StartMenu extends VBox {
         startBtn.setOnMouseEntered(e -> startBtn.setStyle("-fx-background-color: white; -fx-text-fill: black; -fx-padding: 10px 30px; -fx-cursor: hand;"));
         startBtn.setOnMouseExited(e -> startBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-width: 2px; -fx-padding: 10px 30px; -fx-cursor: hand;"));
 
-        // Button Click Action
+        // When clicked: hide this menu and tell GameMain to start playing.
         startBtn.setOnAction(e -> {
-            this.setVisible(false); // Hide the menu
-            onStart.run();          // Let GameMain flip the game state
+            this.setVisible(false);
+            onStart.run();
         });
 
         getChildren().addAll(title, instructions, startBtn);

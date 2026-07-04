@@ -8,16 +8,15 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 
-/**
- * The full-screen "mission failed" overlay. Extracted from GameMain's
- * createGameOverMenu() (construction) and showGameOverScreen() (the
- * dynamic stats/message logic), combined into one cohesive class.
- */
+// The "mission failed" screen shown after the player dies. Shows the
+// final distance, a message based on how long they survived, and a
+// restart button.
 public class GameOverMenu extends VBox {
 
     private final Text gameOverStats;
     private final Text gameOverMessage;
 
+    // Builds the game-over screen. onRestart runs when the player clicks the button.
     public GameOverMenu(int width, int height, Runnable onRestart) {
         super(25);
         setAlignment(Pos.CENTER);
@@ -30,9 +29,9 @@ public class GameOverMenu extends VBox {
         // Title
         Text title = new Text("MISSION FAILED");
         title.setFont(Font.font("Consolas", 60));
-        title.setFill(Color.web("#ff4444"));
+        title.setFill(Color.web("#ff4444")); // A realistic error-red color
 
-        // Dynamic Status (Distance)
+        // Dynamic Stats (Distance)
         gameOverStats = new Text("");
         gameOverStats.setFont(Font.font("Consolas", 30));
         gameOverStats.setFill(Color.WHITE);
@@ -64,17 +63,13 @@ public class GameOverMenu extends VBox {
         getChildren().addAll(title, gameOverStats, gameOverMessage, restartBtn);
     }
 
-    /**
-     * Fills in the dynamic status/message and makes the overlay visible.
-     * Same distance/seconds-survived thresholds as the original
-     * showGameOverScreen() logic.
-     */
+    // Fills in the distance and message, then shows this screen.
     public void show(int distance, int secondsSurvived) {
         gameOverStats.setText("TOTAL DISTANCE: " + distance + "m");
 
         if (secondsSurvived < 15) {
             // Easy Phase Failure (Under 15 seconds)
-            gameOverMessage.setText("CATASTROPHIC LAUNCH FAILURE.\nSteady your thrusters and try harder.");
+            gameOverMessage.setText("CATASTROPHIC LAUNCH FAILURE.\nCalibrate your thrusters and try harder.");
         } else if (secondsSurvived < 45) {
             // Middle Phase Failure (15 to 45 seconds)
             gameOverMessage.setText("NAVIGATION LOST.\nYou reached the outer belt, but space is unforgiving.");
@@ -86,6 +81,7 @@ public class GameOverMenu extends VBox {
         setVisible(true);
     }
 
+    // Hides this screen (used when restarting).
     public void hide() {
         setVisible(false);
     }

@@ -1,14 +1,9 @@
 package com.spacerunner;
 
-/**
- * The possible outcomes of Obstacle.checkCollision(Player).
- * Replaces the old raw String codes ("DEATH", "HEART", "PLATFORM", "NONE")
- * with a type-safe enum: no typos possible, and the compiler tells you
- * every valid outcome instead of it living only in comments.
- */
+// The different things that can happen when an obstacle touches the player.
 public enum CollisionResult {
-    NONE,
-    DEATH,
-    HEART,
-    PLATFORM
+    NONE,     // nothing happened
+    DEATH,    // the player got hit and lost a life (or the game ends)
+    HEART,    // the player picked up an oxygen heart
+    PLATFORM  // the player landed safely on top of a block
 }

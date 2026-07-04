@@ -1,9 +1,7 @@
 package com.spacerunner;
 
-/**
- * The main entry point of the application. 
- * Used to bypass strict JavaFX module path checks at startup.
- */
+// A separate starting point for the app, used to avoid JavaFX errors
+// that can happen when launching an Application class directly.
 public class Launcher {
     public static void main(String[] args) {
         GameMain.main(args);

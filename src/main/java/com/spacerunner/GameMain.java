@@ -18,6 +18,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+// The main class that runs the game. It builds the screen, runs the game
+// loop, reads keyboard input, and handles collisions between the player
+// and obstacles. It uses HUD, StartMenu, GameOverMenu, and ObstacleSpawner
+// to keep those parts organized separately.
+//
+// How to play: press ENTER to start, SPACE or UP to jump, avoid asteroids
+// and spikes, and collect oxygen hearts for extra lives.
 public class GameMain extends Application {
 
     private static final int WIDTH = 800;
@@ -31,18 +38,19 @@ public class GameMain extends Application {
 
     // Game State
     private GameState currentState = GameState.MENU;
-    private int frameCount = 0;
+    private int frameCount = 0; // counts frames since the run started
 
     // Hearts tracking
     private int hearts = 0;
     private final int MAX_HEARTS = 3;
 
-    // Collaborators
+    // The other classes GameMain relies on
     private ObstacleSpawner spawner;
     private HUD hud;
     private StartMenu startMenu;
     private GameOverMenu gameOverMenu;
 
+    // Builds everything on screen and starts the game loop.
     @Override
     public void start(Stage primaryStage) {
         root = new Pane();
@@ -101,7 +109,8 @@ public class GameMain extends Application {
         System.out.println("Game Loaded. State: MENU. Press ENTER to start.");
     }
 
-    // --- MAIN GAME LOOP ---
+    // Runs one frame of gameplay: moves the player, updates the score,
+    // increases difficulty, spawns obstacles, and checks collisions.
     private void updateGame() {
         player.update();
         frameCount++;
@@ -113,6 +122,7 @@ public class GameMain extends Application {
 
     // --- HELPER METHODS ---
 
+    // Reacts to a key press depending on which screen the game is on.
     private void handleInput(KeyCode code) {
         if (currentState == GameState.MENU) {
             if (code == KeyCode.ENTER) {
@@ -130,6 +140,8 @@ public class GameMain extends Application {
         }
     }
 
+    // Asks the spawner if new obstacles should appear, and adds them
+    // to the game if so.
     private void handleSpawning() {
         List<Obstacle> newSpawns = spawner.trySpawn(frameCount);
         for (Obstacle obs : newSpawns) {
@@ -138,6 +150,8 @@ public class GameMain extends Application {
         }
     }
 
+    // Moves every obstacle and checks if it touched the player, then
+    // reacts based on what kind of collision happened.
     private void handleObstacles() {
         Iterator<Obstacle> iter = activeObstacles.iterator();
         while (iter.hasNext()) {
@@ -163,7 +177,7 @@ public class GameMain extends Application {
                         hud.updateLives(hearts);
                         System.out.println("🛡️ Oxygen depleted! Lives left: " + hearts);
 
-                        // Add a brief visual feedback (optional)
+                        // Add a brief visual feedback
                         player.getView().setOpacity(0.5);
                         PauseTransition pause = new PauseTransition(Duration.seconds(0.5));
                         pause.setOnFinished(e -> player.getView().setOpacity(1.0));
@@ -195,6 +209,7 @@ public class GameMain extends Application {
         }
     }
 
+    // Switches to the game-over screen and shows the final stats.
     private void showGameOverScreen() {
         currentState = GameState.GAME_OVER;
         int distance = frameCount / 10;
@@ -202,6 +217,7 @@ public class GameMain extends Application {
         gameOverMenu.show(distance, secondsSurvived);
     }
 
+    // Resets everything back to the start so the player can play again.
     private void restartGame() {
         // Reset time and difficulty via the spawner
         frameCount = 0;
@@ -228,6 +244,7 @@ public class GameMain extends Application {
         currentState = GameState.PLAYING;
     }
 
+    // The real starting point of the program (see Launcher.java too).
     public static void main(String[] args) {
         launch(args);
     }

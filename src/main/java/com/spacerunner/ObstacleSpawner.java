@@ -3,19 +3,12 @@ package com.spacerunner;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Owns all spawning and difficulty-scaling decisions: which obstacle to
- * spawn next, when, and how fast it should move. Extracted from GameMain's
- * handleSpawning() and checkPhaseTransitions(), along with the fields those
- * two methods used (globalSpeed, nextSpawnFrame, heartsSpawnedPhase1/2).
- *
- * GameMain no longer needs to know any spawning rules; it just calls
- * updateDifficulty() and trySpawn() once per frame and adds whatever
- * comes back to the scene.
- */
+// Decides which obstacles to create, when to create them, and how fast
+// they should move. This keeps all the spawning rules in one place
+// instead of inside GameMain.
 public class ObstacleSpawner {
 
-    private final double spawnX;   // x position new obstacles appear at (screen width)
+    private final double spawnX;   // where new obstacles appear (right edge of screen)
     private final double floorY;
 
     private double globalSpeed = -6.0;
@@ -28,7 +21,7 @@ public class ObstacleSpawner {
         this.floorY = floorY;
     }
 
-    /** Same phase thresholds/speeds as the original checkPhaseTransitions(). */
+    // Speeds obstacles up as the game goes on (harder over time).
     public void updateDifficulty(int frameCount) {
         if (frameCount == 1800) {
             globalSpeed = -8.0;
@@ -39,11 +32,8 @@ public class ObstacleSpawner {
         }
     }
 
-    /**
-     * Returns the obstacles spawned this frame (empty list on frames where
-     * nothing spawns yet). Same random/weighted logic as the original
-     * handleSpawning(), just no longer touching GameMain's root/list directly.
-     */
+    // Decides if it's time to spawn something new this frame, and if so,
+    // randomly picks what to spawn (heart, block, spike, or both).
     public List<Obstacle> trySpawn(int frameCount) {
         List<Obstacle> newSpawns = new ArrayList<>();
 
@@ -83,7 +73,7 @@ public class ObstacleSpawner {
         return newSpawns;
     }
 
-    /** Same reset values restartGame() used to set on the old fields. */
+    // Resets all spawning rules back to their starting values (for restart).
     public void reset() {
         globalSpeed = -6.0;
         nextSpawnFrame = 90;

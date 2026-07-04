@@ -3,12 +3,15 @@ package com.spacerunner;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+// An asteroid obstacle. It's not always deadly - if the player lands on
+// top while falling, it acts like a platform instead of killing them.
 public class Block extends Obstacle {
     
     private final double VISUAL_WIDTH = 450;
     private final double VISUAL_HEIGHT = 300;
     private final double HITBOX_SIZE = 40;
 
+    // Creates a new asteroid at the given position.
     public Block(double x, double y) {
         super(x, y);
         Image img = new Image(getClass().getResourceAsStream("/assets/asteroid.png"));
@@ -26,6 +29,8 @@ public class Block extends Obstacle {
         this.hitboxSize = HITBOX_SIZE;
     }
 
+    // If the player is falling and lands on top, it's safe (PLATFORM).
+    // Any other touch is fatal (DEATH).
     @Override
     public CollisionResult checkCollision(Player player) {
         if (this.getBounds().intersects(player.getBounds())) {

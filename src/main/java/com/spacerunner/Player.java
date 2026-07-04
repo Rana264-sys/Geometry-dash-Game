@@ -3,6 +3,8 @@ package com.spacerunner;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+// Represents the player's spaceship: handles jumping, gravity,
+// landing on the floor, and the little tilt animation.
 public class Player extends GameObject {
     private double yVelocity = 0;
     private boolean isJumping = false;
@@ -17,6 +19,7 @@ public class Player extends GameObject {
     private final double VISUAL_HEIGHT = 310;
     private final double HITBOX_SIZE = 40; 
 
+    // Creates the player at the given starting position.
     public Player(double x, double y) {
         super(x, y);
         
@@ -36,6 +39,8 @@ public class Player extends GameObject {
         this.hitboxSize = HITBOX_SIZE;
     }
 
+    // Runs every frame: applies gravity, checks the floor, tilts the ship,
+    // and moves the picture to match the player's position.
     @Override
     public void update() {
         yVelocity += GRAVITY;
@@ -64,6 +69,7 @@ public class Player extends GameObject {
         view.setTranslateY((y - (VISUAL_HEIGHT - HITBOX_SIZE) / 2)+20);
     }
 
+    // Makes the ship jump, but only if it's not already mid-jump.
     public void jump() {
         if (!isJumping) {
             yVelocity = JUMP_FORCE;
@@ -71,11 +77,13 @@ public class Player extends GameObject {
         }
     }
 
+    // Places the player exactly on top of a platform (used when landing on a Block).
     public void landOn(double platformTopY) {
         this.y = platformTopY - HITBOX_SIZE;
         this.yVelocity = 0;
         this.isJumping = false;
     }
 
+    // Returns how fast the player is moving up/down right now.
     public double getYVelocity() { return yVelocity; }
 }

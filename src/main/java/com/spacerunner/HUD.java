@@ -7,17 +7,14 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
-/**
- * Owns the on-screen distance counter and the row of oxygen/life icons.
- * Extracted from GameMain so GameMain doesn't have to know how the HUD
- * is built or redrawn.
- */
+// Shows the score (distance) and life icons on screen while playing.
 public class HUD {
 
     private final Text scoreText;
     private final HBox lifeBox;
     private final Image oxygenIcon;
 
+    // Builds the distance text and the row where life icons will go.
     public HUD(int width) {
         scoreText = new Text("DISTANCE: 0m");
         scoreText.setFont(Font.font("Consolas", 24));
@@ -32,18 +29,22 @@ public class HUD {
         oxygenIcon = new Image(getClass().getResourceAsStream("/assets/oxygen.png"));
     }
 
+    // Gives GameMain the text node so it can be added to the screen once.
     public Text getScoreText() {
         return scoreText;
     }
 
+    // Gives GameMain the life-icon row so it can be added to the screen once.
     public HBox getLifeBox() {
         return lifeBox;
     }
 
+    // Updates the distance shown on screen.
     public void updateDistance(int frameCount) {
         scoreText.setText("DISTANCE: " + (frameCount / 10) + "m");
     }
 
+    // Redraws the life icons to match how many lives the player has.
     public void updateLives(int hearts) {
         lifeBox.getChildren().clear();
         for (int i = 0; i < hearts; i++) {
@@ -55,6 +56,7 @@ public class HUD {
         }
     }
 
+    // Resets the distance text back to zero (used when restarting).
     public void reset() {
         scoreText.setText("DISTANCE: 0m");
     }
