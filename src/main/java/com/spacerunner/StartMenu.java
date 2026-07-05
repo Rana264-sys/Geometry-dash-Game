@@ -10,6 +10,8 @@ import javafx.scene.text.TextAlignment;
 
 import java.util.function.IntConsumer;
 
+// The title/level-select screen shown at launch and when returning to the
+// menu. Shows one button per level; clicking a button starts that level.
 public class StartMenu extends VBox {
 
     public StartMenu(int width, int height, IntConsumer onSelectLevel) {
@@ -33,6 +35,7 @@ public class StartMenu extends VBox {
 
         getChildren().addAll(title, instructions);
 
+        // One button per level, wired to call back into GameMain with the chosen index.
         for (int i = 0; i < LevelData.NAMES.length; i++) {
             final int levelIndex = i;
             Button levelBtn = new Button(LevelData.NAMES[i]);
@@ -45,6 +48,7 @@ public class StartMenu extends VBox {
         }
     }
 
+    // Applies the shared look (outline style, hover highlight) to a menu button.
     private void styleButton(Button btn) {
         btn.setFont(Font.font("Consolas", 18));
         String base = "-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; " +

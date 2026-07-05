@@ -1,19 +1,11 @@
 package com.spacerunner;
-public abstract class Obstacle extends GameObject {
-    protected double xVelocity = -360; // px/s
+
+// Marker base for scrolling objects that can hurt or block the player
+// (as opposed to Pickup, which only ever helps them). Subclasses just
+// need to implement checkCollision() to return DEATH, PLATFORM, or NONE
+// as appropriate - the scrolling behavior itself lives in ScrollingObject.
+public abstract class Obstacle extends ScrollingObject {
     public Obstacle(double x, double y) {
         super(x, y);
-    }
-    @Override
-    public void update(double deltaTime) {
-        x += xVelocity * deltaTime;
-        view.setTranslateX(x);
-    }
-    public abstract CollisionResult checkCollision(Player player);
-    public boolean isOffScreen() {
-        return x < -100;
-    }
-    public void setXVelocity(double speed) {
-        this.xVelocity = speed;
     }
 }

@@ -6,18 +6,20 @@ import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-
+// Draws and scrolls the starfield and moon-floor visuals behind the game,
+// and applies each level's color theme on top of them. Each layer uses two
+// copies side by side that swap around, so the scroll looks endless.
 public class Background {
 
-    private static final double PARALLAX_FACTOR = 0.2; //(make the stars run slower
+    private static final double PARALLAX_FACTOR = 0.2; // stars move slower than the floor, to fake depth
 
     private final ImageView starsA;
     private final ImageView starsB;
     private final ImageView floorA;
     private final ImageView floorB;
     private final Rectangle floorBorder;
-    private final Rectangle starsOverlay;
-    private final Rectangle floorOverlay;
+    private final Rectangle starsOverlay; 
+    private final Rectangle floorOverlay; 
     private final double width;
 
     private double starsX = 0;
@@ -57,7 +59,7 @@ public class Background {
         floorOverlay.setMouseTransparent(true);
     }
 
-
+    // Tints the starfield and floor with the current level's colors.
     public void setTheme(Color starsColor, double starsIntensity, Color floorColor, double floorIntensity) {
         starsOverlay.setFill(starsColor);
         starsOverlay.setOpacity(starsIntensity);
@@ -65,6 +67,7 @@ public class Background {
         floorOverlay.setOpacity(floorIntensity);
     }
 
+    // Helper to build one scaled, non-distorted image tile.
     private ImageView tiledView(Image image, double w, double h) {
         ImageView view = new ImageView(image);
         view.setFitWidth(w);

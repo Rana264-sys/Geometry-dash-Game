@@ -4,11 +4,14 @@ import javafx.scene.effect.Glow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class ShieldItem extends Obstacle {
+// A pickup that grants the player one shield charge (absorbs the next
+// deadly hit) when touched.
+public class ShieldItem extends Pickup {
 
     private final double VISUAL_WIDTH = 90;
     private final double VISUAL_HEIGHT = 90;
     private final double HITBOX_SIZE = 30;
+
     public ShieldItem(double x, double y) {
         super(x, y);
 
@@ -26,11 +29,14 @@ public class ShieldItem extends Obstacle {
         this.visualHeight = VISUAL_HEIGHT;
         this.hitboxSize = HITBOX_SIZE;
     }
+
+    // Touching it grants a shield; actually adding the shield charge is
+    // handled by GameMain when it sees this result.
     @Override
-    public CollisionResult checkCollision(Player player) {
+    public ContactResult checkCollision(Player player) {
         if (this.getBounds().intersects(player.getBounds())) {
-            return CollisionResult.SHIELD;
+            return ContactResult.SHIELD;
         }
-        return CollisionResult.NONE;
+        return ContactResult.NONE;
     }
 }

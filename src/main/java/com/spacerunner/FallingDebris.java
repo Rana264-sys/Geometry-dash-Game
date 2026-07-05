@@ -3,7 +3,8 @@ package com.spacerunner;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-
+// A meteor that starts above the floor and slowly falls while scrolling
+// left and tumbling, then stops once it reaches the floor. Deadly on contact.
 public class FallingDebris extends Obstacle {
 
     private static final double VISUAL_SIZE = 55;
@@ -14,7 +15,7 @@ public class FallingDebris extends Obstacle {
 
     private final ImageView imageView;
     private double posY;
-    private final double maxY;
+    private final double maxY; // the floor - it can't fall past this
     private double rotation = 0;
 
     public FallingDebris(double x, double floorY) {
@@ -36,6 +37,8 @@ public class FallingDebris extends Obstacle {
         this.maxY = floorY - HITBOX_SIZE;
     }
 
+    // Scrolls left, falls down at a fixed speed (capped at the floor), and
+    // spins slowly for a tumbling look.
     @Override
     public void update(double deltaTime) {
         x += xVelocity * deltaTime;
@@ -46,11 +49,12 @@ public class FallingDebris extends Obstacle {
         imageView.setRotate(rotation);
     }
 
+    // Always deadly on contact.
     @Override
-    public CollisionResult checkCollision(Player player) {
+    public ContactResult checkCollision(Player player) {
         if (this.getBounds().intersects(player.getBounds())) {
-            return CollisionResult.DEATH;
+            return ContactResult.DEATH;
         }
-        return CollisionResult.NONE;
+        return ContactResult.NONE;
     }
 }

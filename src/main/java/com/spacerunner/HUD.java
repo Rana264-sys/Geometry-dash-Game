@@ -8,11 +8,12 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
-
+// Builds and updates all the on-screen text/icons shown during gameplay:
+// distance, shield icons, nitro status, double-jump status, and the menu button.
 public class HUD {
 
     private final Text scoreText;
-    private final HBox lifeBox;
+    private final HBox lifeBox; // holds one shield icon per shield charge
     private final Text nitroActiveText;
     private final Text nitroReadyText;
     private final Text doubleJumpText;
@@ -76,23 +77,28 @@ public class HUD {
     public Text getMenuButton() {
         return menuButton;
     }
+
+    // Shows/hides the "NITRO BOOST!" text while it's active.
     public void updateNitroActive(boolean active) {
         nitroActiveText.setText(active ? "🔥 NITRO BOOST!" : "");
     }
 
-    // nitro
+    // Shows how many nitro charges are stored and ready to use.
     public void updateNitroReady(int charges) {
         nitroReadyText.setText(charges > 0 ? "⚡ NITRO x" + charges + " (SHIFT)" : "");
     }
-    //double jump
+
+    // Shows/hides the "double jump ready" text.
     public void updateDoubleJump(boolean available) {
         doubleJumpText.setText(available ? "⇈ DOUBLE JUMP READY" : "");
     }
-    //distance
-    public void updateDistance(double elapsedSeconds) {
-        scoreText.setText("DISTANCE: " + (int) (elapsedSeconds * 6) + "m");
+
+    // Updates the distance counter shown to the player.
+    public void updateDistance(double distanceMeters) {
+        scoreText.setText("DISTANCE: " + (int) distanceMeters + "m");
     }
 
+    // Redraws the shield icons to match the current shield count.
     public void updateShields(int shields) {
         lifeBox.getChildren().clear();
         for (int i = 0; i < shields; i++) {
@@ -103,6 +109,8 @@ public class HUD {
             lifeBox.getChildren().add(icon);
         }
     }
+
+    // Resets the HUD text back to its starting state for a new level.
     public void reset() {
         scoreText.setText("DISTANCE: 0m");
     }

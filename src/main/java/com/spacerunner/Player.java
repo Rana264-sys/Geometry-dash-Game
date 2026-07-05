@@ -75,6 +75,7 @@ public class Player extends GameObject {
     public void update(double deltaTime) {
         boolean wasOnGround = onGround;
 
+        // Falling uses stronger gravity than rising, for a snappier jump arc.
         double gravity = (yVelocity < 0 ? GRAVITY : GRAVITY * FALL_GRAVITY_MULTIPLIER) * gravityScale;
         yVelocity = Math.min(yVelocity + gravity * deltaTime, MAX_FALL_SPEED);
         y += yVelocity * deltaTime;
@@ -88,6 +89,8 @@ public class Player extends GameObject {
             onGround = false;
         }
 
+        // Coyote time: keep a short grace window after leaving the ground
+        // where a jump still counts as "from the ground".
         if (onGround) {
             coyoteTimer = COYOTE_TIME;
         } else {
@@ -98,6 +101,8 @@ public class Player extends GameObject {
             playLandingSquash();
         }
 
+        // Jump buffering: if the player pressed jump slightly too early,
+        // fire it the instant they touch down instead of ignoring it.
         if (jumpBufferTimer > 0) {
             jumpBufferTimer = Math.max(0, jumpBufferTimer - deltaTime);
             if (onGround) {
@@ -137,6 +142,7 @@ public class Player extends GameObject {
         }
     }
 
+    // Shared logic for any kind of jump (ground, coyote, or double-jump).
     private void doJump() {
         yVelocity = JUMP_VELOCITY;
         onGround = false;
@@ -144,6 +150,7 @@ public class Player extends GameObject {
         playTakeoffStretch();
     }
 
+    // Little squash animation played when the ship touches down.
     private void playLandingSquash() {
         ScaleTransition squash = new ScaleTransition(Duration.millis(120), imageView);
         squash.setFromX(1.15);
@@ -153,6 +160,7 @@ public class Player extends GameObject {
         squash.play();
     }
 
+    // Little stretch animation played the moment the ship jumps.
     private void playTakeoffStretch() {
         ScaleTransition stretch = new ScaleTransition(Duration.millis(100), imageView);
         stretch.setFromX(0.9);

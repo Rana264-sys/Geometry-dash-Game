@@ -4,7 +4,9 @@ import javafx.scene.effect.Glow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class NitroItem extends Obstacle {
+// A pickup that grants the player one nitro charge (a temporary speed
+// boost, activated later with SHIFT) when touched.
+public class NitroItem extends Pickup {
 
     private final double VISUAL_WIDTH = 90;
     private final double VISUAL_HEIGHT = 90;
@@ -28,11 +30,12 @@ public class NitroItem extends Obstacle {
         this.hitboxSize = HITBOX_SIZE;
     }
 
+    // Touching it grants a nitro charge; GameMain does the actual granting.
     @Override
-    public CollisionResult checkCollision(Player player) {
+    public ContactResult checkCollision(Player player) {
         if (this.getBounds().intersects(player.getBounds())) {
-            return CollisionResult.NITRO;
+            return ContactResult.NITRO;
         }
-        return CollisionResult.NONE;
+        return ContactResult.NONE;
     }
 }

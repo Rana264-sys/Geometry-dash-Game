@@ -2,7 +2,8 @@ package com.spacerunner;
 
 import javafx.scene.paint.Color;
 
-
+// Holds the three hand-authored levels. This is the one place to edit
+// to change a level's obstacle layout, length, speed, gravity, or theme.
 public class LevelData {
 
     public static final String[] NAMES = {
@@ -11,6 +12,7 @@ public class LevelData {
         "LEVEL 3 - VIOLET"
     };
 
+    // Returns the level for the given menu index (0, 1, or 2).
     public static Level get(int index) {
         switch (index) {
             case 0: return blue();
@@ -20,7 +22,7 @@ public class LevelData {
         }
     }
 
-
+    // Level 1: slower speed, lighter gravity - the easy introductory level.
     private static Level blue() {
         return new Level.Builder(NAMES[0], -390)
             .gravity(0.8)
@@ -32,7 +34,7 @@ public class LevelData {
             .build();
     }
 
-
+    // Level 2: faster, heavier gravity, denser obstacle mix with spore swarms.
     private static Level green() {
         return new Level.Builder(NAMES[1], -450)
             .gravity(1.15)
@@ -46,7 +48,7 @@ public class LevelData {
             .build();
     }
 
-
+    // Level 3: fastest and heaviest, the hardest level with falling debris added in.
     private static Level violet() {
         return new Level.Builder(NAMES[2], -540)
             .gravity(1.35)

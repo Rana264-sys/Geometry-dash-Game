@@ -3,8 +3,10 @@ package com.spacerunner;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+// A solid asteroid the player can either land on top of (safe) or crash
+// into from the side/below (deadly).
 public class Block extends Obstacle {
-    
+
     private final double VISUAL_WIDTH = 450;
     private final double VISUAL_HEIGHT = 300;
     private final double HITBOX_SIZE = 40;
@@ -26,14 +28,16 @@ public class Block extends Obstacle {
         this.hitboxSize = HITBOX_SIZE;
     }
 
+    // If the player is falling and lands roughly on top, treat it as a safe
+    // platform. Otherwise, touching it at all is deadly.
     @Override
-    public CollisionResult checkCollision(Player player) {
+    public ContactResult checkCollision(Player player) {
         if (this.getBounds().intersects(player.getBounds())) {
             if (player.getYVelocity() > 0 && player.getBounds().getMaxY() <= this.getBounds().getMinY() + 15) {
-                return CollisionResult.PLATFORM;
+                return ContactResult.PLATFORM;
             }
-            return CollisionResult.DEATH;
+            return ContactResult.DEATH;
         }
-        return CollisionResult.NONE;
+        return ContactResult.NONE;
     }
 }

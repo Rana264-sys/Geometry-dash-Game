@@ -5,6 +5,8 @@ import javafx.scene.effect.Glow;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
+// A cluster of glowing green orbs that gently bob up and down as a group.
+// Purely a visual variety hazard - deadly on contact, like a spike.
 public class SporeSwarm extends Obstacle {
 
     private static final double VISUAL_WIDTH = 190;
@@ -14,6 +16,8 @@ public class SporeSwarm extends Obstacle {
     private static final double BOB_AMPLITUDE = 16;
     private static final double BOB_SPEED = 1.6; // radians-ish per second
 
+    // Starting offsets/phases for each of the 4 orbs, so they don't all
+    // bob in perfect sync.
     private static final double[] BASE_X_OFFSET = {-60, -20, 25, 65};
     private static final double[] BASE_Y_OFFSET = {10, -25, 15, -10};
     private static final double[] PHASE = {0.0, 1.3, 2.6, 3.9};
@@ -47,6 +51,7 @@ public class SporeSwarm extends Obstacle {
         this.hitboxSize = HITBOX_SIZE;
     }
 
+    // Scrolls left like any obstacle, then makes each orb bob independently.
     @Override
     public void update(double deltaTime) {
         super.update(deltaTime);
@@ -57,11 +62,12 @@ public class SporeSwarm extends Obstacle {
         }
     }
 
+    // Touching any part of the swarm's hitbox is deadly.
     @Override
-    public CollisionResult checkCollision(Player player) {
+    public ContactResult checkCollision(Player player) {
         if (this.getBounds().intersects(player.getBounds())) {
-            return CollisionResult.DEATH;
+            return ContactResult.DEATH;
         }
-        return CollisionResult.NONE;
+        return ContactResult.NONE;
     }
 }

@@ -14,7 +14,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-
+// The main entry point and game engine. Owns the game loop, input handling,
+// the list of active obstacles/pickups, collision resolution, nitro timing,
+// and switching between menu/playing/game-over/level-complete screens.
 public class GameMain extends Application {
 
     private static final int WIDTH = 800;
@@ -25,8 +27,13 @@ public class GameMain extends Application {
     private static final double NITRO_MULTIPLIER = 1.6;
     private static final double MAX_DELTA_TIME = 0.05; // can't skip the player through a wall
 
+    // Chosen so Level 1's numbers match the old elapsedSeconds*6 formula
+    // (390 px/s / 65 = 6 m/s), but now every level's distance reflects its
+    // own scroll speed, and nitro boosts correctly add extra distance too.
+    private static final double PIXELS_PER_METER = 65;
+
     private Player player;
-    private List<Obstacle> activeObstacles = new ArrayList<>();
+    private List<ScrollingObject> activeObjects = new ArrayList<>(); // everything currently on screen
     private Pane root;
     private AnimationTimer gameLoop;
     private Background background;
@@ -34,6 +41,7 @@ public class GameMain extends Application {
 
     private GameState currentState = GameState.MENU;
     private double elapsedSeconds = 0;
+    private double distanceTraveled = 0; // accumulated px, at actual on-screen scroll speed
 
     private int shields = 0;
     private final int MAX_SHIELDS = 3;
@@ -49,6 +57,8 @@ public class GameMain extends Application {
     private GameOverMenu gameOverMenu;
     private LevelCompleteMenu levelCompleteMenu;
 
+    // JavaFX calls this once at startup. Builds the scene, wires up input
+    // and menus, and starts the game loop.
     @Override
     public void start(Stage primaryStage) {
         root = new Pane();
@@ -81,6 +91,8 @@ public class GameMain extends Application {
 
         scene.setOnKeyPressed(event -> handleInput(event.getCode()));
 
+        // The core game loop: runs every frame, computes real elapsed time
+        // (delta time), and only updates gameplay while actually playing.
         gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -107,24 +119,27 @@ public class GameMain extends Application {
         System.out.println("Game Loaded. State: MENU. Pick a level to start.");
     }
 
-
+    // Runs one frame of actual gameplay: updates nitro, moves the player and
+    // background, spawns new obstacles, resolves collisions, and checks if
+    // the level is finished.
     private void updateGame(double deltaTime) {
         updateNitro(deltaTime);
         double effectiveSpeed = nitroActive ? currentLevel.getSpeed() * NITRO_MULTIPLIER : currentLevel.getSpeed();
 
         player.update(deltaTime);
         elapsedSeconds += deltaTime;
-        hud.updateDistance(elapsedSeconds);
+        distanceTraveled += Math.abs(effectiveSpeed) * deltaTime;
+        hud.updateDistance(distanceTraveled / PIXELS_PER_METER);
         background.update(effectiveSpeed * deltaTime);
         handleSpawning(effectiveSpeed);
         handleObstacles(effectiveSpeed, deltaTime);
 
-        if (currentLevel.isComplete(elapsedSeconds, activeObstacles.isEmpty())) {
+        if (currentLevel.isComplete(elapsedSeconds, activeObjects.isEmpty())) {
             showLevelCompleteScreen();
         }
     }
 
-
+    // Reacts to key presses: jump, activate nitro, or open the menu.
     private void handleInput(KeyCode code) {
         if (currentState != GameState.PLAYING) {
             return;
@@ -142,6 +157,7 @@ public class GameMain extends Application {
         }
     }
 
+    // Counts down the active nitro boost and turns it off when it runs out.
     private void updateNitro(double deltaTime) {
         if (nitroActive) {
             nitroSecondsLeft -= deltaTime;
@@ -153,6 +169,7 @@ public class GameMain extends Application {
         }
     }
 
+    // Turns on the nitro speed boost for a fixed duration, with a glow effect.
     private void activateNitro() {
         nitroActive = true;
         nitroSecondsLeft = NITRO_DURATION_SECONDS;
@@ -160,27 +177,32 @@ public class GameMain extends Application {
         hud.updateNitroActive(true);
     }
 
+    // Asks the current level if anything is due to spawn, and adds it to
+    // the scene and the active-objects list if so.
     private void handleSpawning(double effectiveSpeed) {
-        List<Obstacle> newSpawns = currentLevel.trySpawn(elapsedSeconds, WIDTH, FLOOR_Y);
-        for (Obstacle obs : newSpawns) {
+        List<ScrollingObject> newSpawns = currentLevel.trySpawn(elapsedSeconds, WIDTH, FLOOR_Y);
+        for (ScrollingObject obs : newSpawns) {
             obs.setXVelocity(effectiveSpeed);
-            activeObstacles.add(obs);
+            activeObjects.add(obs);
             root.getChildren().add(obs.getView());
         }
     }
 
-
+    // Moves every active obstacle/pickup, checks each one for contact with
+    // the player, and reacts based on what kind of contact it was.
+    // Also removes anything that's scrolled off screen.
     private void handleObstacles(double effectiveSpeed, double deltaTime) {
-        Iterator<Obstacle> iter = activeObstacles.iterator();
+        Iterator<ScrollingObject> iter = activeObjects.iterator();
         while (iter.hasNext()) {
-            Obstacle obs = iter.next();
+            ScrollingObject obs = iter.next();
             obs.setXVelocity(effectiveSpeed);
             obs.update(deltaTime);
 
-            CollisionResult collision = obs.checkCollision(player);
+            ContactResult collision = obs.checkCollision(player);
 
             switch (collision) {
                 case SHIELD:
+                    // Picked up a shield charge (capped at MAX_SHIELDS).
                     if (shields < MAX_SHIELDS) {
                         shields++;
                         hud.updateShields(shields);
@@ -191,6 +213,7 @@ public class GameMain extends Application {
                     break;
 
                 case NITRO:
+                    // Picked up a nitro charge, ready to use with SHIFT.
                     player.grantNitroCharge();
                     hud.updateNitroReady(player.getNitroCharges());
                     System.out.println("Nitro charge collected!");
@@ -199,6 +222,7 @@ public class GameMain extends Application {
                     break;
 
                 case DOUBLE_JUMP:
+                    // Picked up an extra mid-air jump.
                     player.grantDoubleJump();
                     hud.updateDoubleJump(true);
                     System.out.println("Double Jump charge collected!");
@@ -207,6 +231,8 @@ public class GameMain extends Application {
                     break;
 
                 case DEATH:
+                    // Hit something harmful. A shield absorbs the hit if
+                    // available; otherwise it's game over.
                     if (shields > 0) {
                         shields--;
                         hud.updateShields(shields);
@@ -227,6 +253,7 @@ public class GameMain extends Application {
                     break;
 
                 case PLATFORM:
+                    // Landed safely on top of a block.
                     player.landOn(obs.getBounds().getMinY());
                     break;
 
@@ -236,7 +263,7 @@ public class GameMain extends Application {
                     break;
             }
 
-            // Memory cleanup
+            // Memory cleanup: drop anything that's scrolled off the left edge.
             if (obs.isOffScreen()) {
                 root.getChildren().remove(obs.getView());
                 iter.remove();
@@ -244,21 +271,26 @@ public class GameMain extends Application {
         }
     }
 
+    // Switches to the game-over screen and shows the final run stats.
     private void showGameOverScreen() {
         currentState = GameState.GAME_OVER;
-        int distance = (int) (elapsedSeconds * 6);
+        int distance = (int) (distanceTraveled / PIXELS_PER_METER);
         int secondsSurvived = (int) elapsedSeconds;
         gameOverMenu.show(distance, secondsSurvived);
     }
 
+    // Switches to the level-complete screen and shows the final run stats.
     private void showLevelCompleteScreen() {
         currentState = GameState.LEVEL_COMPLETE;
-        int distance = (int) (elapsedSeconds * 6);
+        int distance = (int) (distanceTraveled / PIXELS_PER_METER);
         int secondsSurvived = (int) elapsedSeconds;
         boolean hasNextLevel = currentLevelIndex + 1 < LevelData.NAMES.length;
         levelCompleteMenu.show(currentLevel.getName(), distance, secondsSurvived, hasNextLevel);
     }
 
+    // Sets up everything needed to start (or restart) a level: loads the
+    // level data, resets the player/HUD/timers, clears old obstacles, and
+    // switches to the PLAYING state.
     private void loadLevel(int levelIndex) {
         currentLevelIndex = levelIndex;
         currentLevel = LevelData.get(levelIndex);
@@ -268,6 +300,7 @@ public class GameMain extends Application {
         );
 
         elapsedSeconds = 0;
+        distanceTraveled = 0;
         shields = 0;
         nitroActive = false;
         nitroSecondsLeft = 0;
@@ -277,10 +310,10 @@ public class GameMain extends Application {
         player.reset(FLOOR_Y - 40);
         player.setGravityScale(currentLevel.getGravityMultiplier());
 
-        for (Obstacle obs : activeObstacles) {
+        for (ScrollingObject obs : activeObjects) {
             root.getChildren().remove(obs.getView());
         }
-        activeObstacles.clear();
+        activeObjects.clear();
 
         hud.reset();
         hud.updateShields(shields);
@@ -296,9 +329,12 @@ public class GameMain extends Application {
         System.out.println("State Changed: PLAYING (" + currentLevel.getName() + ")");
     }
 
+    // Restarts the level the player just failed.
     private void restartLevel() {
         loadLevel(currentLevelIndex);
     }
+
+    // Moves on to the next level, or back to level select if this was the last one.
     private void goToNextLevel() {
         if (currentLevelIndex + 1 < LevelData.NAMES.length) {
             loadLevel(currentLevelIndex + 1);
@@ -306,6 +342,8 @@ public class GameMain extends Application {
             showLevelSelect();
         }
     }
+
+    // Returns to the level-select menu.
     private void showLevelSelect() {
         currentState = GameState.MENU;
         gameOverMenu.hide();
@@ -313,6 +351,7 @@ public class GameMain extends Application {
         startMenu.setVisible(true);
     }
 
+    // Standard JavaFX launch point.
     public static void main(String[] args) {
         launch(args);
     }

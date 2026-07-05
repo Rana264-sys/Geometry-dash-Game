@@ -4,7 +4,8 @@ import javafx.scene.effect.Glow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class DoubleJumpItem extends Obstacle {
+// A pickup that grants the player one extra mid-air jump when touched.
+public class DoubleJumpItem extends Pickup {
 
     private final double VISUAL_SIZE = 60;
     private final double HITBOX_SIZE = 36;
@@ -26,12 +27,13 @@ public class DoubleJumpItem extends Obstacle {
         this.visualHeight = VISUAL_SIZE;
         this.hitboxSize = HITBOX_SIZE;
     }
-//gaining
+
+    // Touching it grants a double-jump charge; GameMain does the actual granting.
     @Override
-    public CollisionResult checkCollision(Player player) {
+    public ContactResult checkCollision(Player player) {
         if (this.getBounds().intersects(player.getBounds())) {
-            return CollisionResult.DOUBLE_JUMP;
+            return ContactResult.DOUBLE_JUMP;
         }
-        return CollisionResult.NONE;
+        return ContactResult.NONE;
     }
 }

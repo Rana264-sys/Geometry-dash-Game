@@ -8,7 +8,9 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 
-
+// The "MISSION FAILED" overlay shown when the player dies. Shows the run's
+// status and a message that changes based on how long they survived, plus
+// a restart button.
 public class GameOverMenu extends VBox {
 
     private final Text gameOverStats;
@@ -54,6 +56,7 @@ public class GameOverMenu extends VBox {
         getChildren().addAll(title, gameOverStats, gameOverMessage, restartBtn);
     }
 
+    // Fills in the stats and picks a message based on how long the run lasted, then shows the menu.
     public void show(int distance, int secondsSurvived) {
         gameOverStats.setText("TOTAL DISTANCE: " + distance + "m");
 

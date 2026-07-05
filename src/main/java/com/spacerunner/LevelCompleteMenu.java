@@ -8,7 +8,9 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 
-
+// The "MISSION COMPLETE" overlay shown when a level is finished. Shows the
+// run's stats and offers a "next level" button (hidden if there isn't one)
+// plus a "back to level select" button.
 public class LevelCompleteMenu extends VBox {
 
     private final Text statsText;
@@ -41,6 +43,7 @@ public class LevelCompleteMenu extends VBox {
         getChildren().addAll(title, statsText, nextBtn, menuBtn);
     }
 
+    // Applies the shared look (outline style, hover highlight) to a menu button.
     private void styleButton(Button btn) {
         btn.setFont(Font.font("Consolas", 22));
         String base = "-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; " +
@@ -50,6 +53,9 @@ public class LevelCompleteMenu extends VBox {
         btn.setOnMouseEntered(e -> btn.setStyle(hover));
         btn.setOnMouseExited(e -> btn.setStyle(base));
     }
+
+    // Fills in the stats, shows/hides the next-level button depending on
+    // whether there is one, then shows the menu.
     public void show(String levelName, int distance, int secondsSurvived, boolean hasNextLevel) {
         statsText.setText(levelName + " CLEARED\nDISTANCE: " + distance + "m   TIME: " + secondsSurvived + "s");
         nextBtn.setVisible(hasNextLevel);
