@@ -34,10 +34,10 @@ public class Level {
     private static final double SPAWN_JITTER_SECONDS = 0.35;
 
     private final String name;
-    private final double speed; // px/s
+    private final double speed; 
     private final double gravityMultiplier;
-    private final List<SpawnEvent> events; // authored timeline, never modified
-    private List<SpawnEvent> activeEvents; // jittered copy actually used during play
+    private final List<SpawnEvent> events; 
+    private List<SpawnEvent> activeEvents; 
     private final double endTime;
     private int nextEventIndex = 0;
 
@@ -54,7 +54,6 @@ public class Level {
         this.events = events;
         this.activeEvents = jitteredCopyOf(events);
         double lastSeconds = events.isEmpty() ? 0 : events.get(events.size() - 1).seconds;
-        // extra buffer covers the case where jitter pushes the last event later than authored
         this.endTime = lastSeconds + 4.0 + SPAWN_JITTER_SECONDS;
         this.starsColor = starsColor;
         this.starsIntensity = starsIntensity;
@@ -136,7 +135,7 @@ public class Level {
 
     // --- Builder for authoring a level's obstacle timeline in seconds ---
     // Lets LevelData write a level as a readable chain of calls, e.g.
-    // .spike(2.0).block(4.0).shield(6.0), instead of building the list by hand.
+    // .spike(2.0).block(4.0).shield(6.0)
     public static class Builder {
         private final String name;
         private final double speed;

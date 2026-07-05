@@ -9,13 +9,13 @@ public class FallingDebris extends Obstacle {
 
     private static final double VISUAL_SIZE = 55;
     private static final double HITBOX_SIZE = 34;
-    private static final double FALL_SPEED = 260; // px/s downward
+    private static final double FALL_SPEED = 260; 
     private static final double START_HEIGHT_ABOVE_FLOOR = 260;
-    private static final double ROTATION_SPEED = 90; // deg/s - a gentle tumble, kept minimal on purpose
+    private static final double ROTATION_SPEED = 90; 
 
     private final ImageView imageView;
     private double posY;
-    private final double maxY; // the floor - it can't fall past this
+    private final double maxY; 
     private double rotation = 0;
 
     public FallingDebris(double x, double floorY) {

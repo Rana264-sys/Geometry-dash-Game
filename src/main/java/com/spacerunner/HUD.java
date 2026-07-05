@@ -13,7 +13,7 @@ import javafx.scene.text.Text;
 public class HUD {
 
     private final Text scoreText;
-    private final HBox lifeBox; // holds one shield icon per shield charge
+    private final HBox lifeBox; 
     private final Text nitroActiveText;
     private final Text nitroReadyText;
     private final Text doubleJumpText;

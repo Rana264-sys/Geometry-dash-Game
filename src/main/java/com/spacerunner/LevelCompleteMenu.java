@@ -54,7 +54,7 @@ public class LevelCompleteMenu extends VBox {
         btn.setOnMouseExited(e -> btn.setStyle(base));
     }
 
-    // Fills in the stats, shows/hides the next-level button depending on
+    // Fills in the status, shows/hides the next-level button depending on
     // whether there is one, then shows the menu.
     public void show(String levelName, int distance, int secondsSurvived, boolean hasNextLevel) {
         statsText.setText(levelName + " CLEARED\nDISTANCE: " + distance + "m   TIME: " + secondsSurvived + "s");

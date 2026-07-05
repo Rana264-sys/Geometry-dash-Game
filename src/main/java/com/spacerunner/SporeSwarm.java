@@ -5,7 +5,7 @@ import javafx.scene.effect.Glow;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
-// A cluster of glowing green orbs that gently bob up and down as a group.
+// A cluster of glowing green spheres that gently bob up and down as a group.
 // Purely a visual variety hazard - deadly on contact, like a spike.
 public class SporeSwarm extends Obstacle {
 
@@ -14,9 +14,9 @@ public class SporeSwarm extends Obstacle {
     private static final double HITBOX_SIZE = 80;
     private static final double ORB_RADIUS = 14;
     private static final double BOB_AMPLITUDE = 16;
-    private static final double BOB_SPEED = 1.6; // radians-ish per second
+    private static final double BOB_SPEED = 1.6; 
 
-    // Starting offsets/phases for each of the 4 orbs, so they don't all
+    // Starting offsets/phases for each of the 4 spheres, so they don't all
     // bob in perfect sync.
     private static final double[] BASE_X_OFFSET = {-60, -20, 25, 65};
     private static final double[] BASE_Y_OFFSET = {10, -25, 15, -10};
@@ -28,8 +28,8 @@ public class SporeSwarm extends Obstacle {
     public SporeSwarm(double x, double floorY) {
         super(x, floorY);
 
-        double centerY = floorY - 90; // same mid-air lane the old cloud used
-
+        double centerY = floorY - 90;
+        
         Group group = new Group();
         for (int i = 0; i < orbs.length; i++) {
             Circle orb = new Circle(ORB_RADIUS, Color.web("#66ff99", 0.85));
@@ -51,7 +51,7 @@ public class SporeSwarm extends Obstacle {
         this.hitboxSize = HITBOX_SIZE;
     }
 
-    // Scrolls left like any obstacle, then makes each orb bob independently.
+    // Scrolls left like any obstacle, then makes each sphere bob independently.
     @Override
     public void update(double deltaTime) {
         super.update(deltaTime);

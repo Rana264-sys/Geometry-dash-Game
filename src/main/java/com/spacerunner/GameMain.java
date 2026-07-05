@@ -25,15 +25,12 @@ public class GameMain extends Application {
 
     private static final double NITRO_DURATION_SECONDS = 3.0;
     private static final double NITRO_MULTIPLIER = 1.6;
-    private static final double MAX_DELTA_TIME = 0.05; // can't skip the player through a wall
+    private static final double MAX_DELTA_TIME = 0.05; 
 
-    // Chosen so Level 1's numbers match the old elapsedSeconds*6 formula
-    // (390 px/s / 65 = 6 m/s), but now every level's distance reflects its
-    // own scroll speed, and nitro boosts correctly add extra distance too.
     private static final double PIXELS_PER_METER = 65;
 
     private Player player;
-    private List<ScrollingObject> activeObjects = new ArrayList<>(); // everything currently on screen
+    private List<ScrollingObject> activeObjects = new ArrayList<>(); 
     private Pane root;
     private AnimationTimer gameLoop;
     private Background background;
@@ -41,7 +38,7 @@ public class GameMain extends Application {
 
     private GameState currentState = GameState.MENU;
     private double elapsedSeconds = 0;
-    private double distanceTraveled = 0; // accumulated px, at actual on-screen scroll speed
+    private double distanceTraveled = 0; 
 
     private int shields = 0;
     private final int MAX_SHIELDS = 3;
@@ -57,7 +54,6 @@ public class GameMain extends Application {
     private GameOverMenu gameOverMenu;
     private LevelCompleteMenu levelCompleteMenu;
 
-    // JavaFX calls this once at startup. Builds the scene, wires up input
     // and menus, and starts the game loop.
     @Override
     public void start(Stage primaryStage) {
@@ -202,7 +198,6 @@ public class GameMain extends Application {
 
             switch (collision) {
                 case SHIELD:
-                    // Picked up a shield charge (capped at MAX_SHIELDS).
                     if (shields < MAX_SHIELDS) {
                         shields++;
                         hud.updateShields(shields);
@@ -213,7 +208,6 @@ public class GameMain extends Application {
                     break;
 
                 case NITRO:
-                    // Picked up a nitro charge, ready to use with SHIFT.
                     player.grantNitroCharge();
                     hud.updateNitroReady(player.getNitroCharges());
                     System.out.println("Nitro charge collected!");
@@ -222,7 +216,6 @@ public class GameMain extends Application {
                     break;
 
                 case DOUBLE_JUMP:
-                    // Picked up an extra mid-air jump.
                     player.grantDoubleJump();
                     hud.updateDoubleJump(true);
                     System.out.println("Double Jump charge collected!");
@@ -231,14 +224,11 @@ public class GameMain extends Application {
                     break;
 
                 case DEATH:
-                    // Hit something harmful. A shield absorbs the hit if
-                    // available; otherwise it's game over.
                     if (shields > 0) {
                         shields--;
                         hud.updateShields(shields);
                         System.out.println("Shield absorbed the hit! Shields left: " + shields);
 
-                        // visual feedback
                         player.getView().setOpacity(0.5);
                         PauseTransition pause = new PauseTransition(Duration.seconds(0.5));
                         pause.setOnFinished(e -> player.getView().setOpacity(1.0));
@@ -253,17 +243,15 @@ public class GameMain extends Application {
                     break;
 
                 case PLATFORM:
-                    // Landed safely on top of a block.
                     player.landOn(obs.getBounds().getMinY());
                     break;
 
                 case NONE:
                 default:
-                    // No collision this frame
                     break;
             }
 
-            // Memory cleanup: drop anything that's scrolled off the left edge.
+            // Memory cleanup
             if (obs.isOffScreen()) {
                 root.getChildren().remove(obs.getView());
                 iter.remove();
@@ -271,7 +259,7 @@ public class GameMain extends Application {
         }
     }
 
-    // Switches to the game-over screen and shows the final run stats.
+    // Switches to the game-over screen and shows the final run status.
     private void showGameOverScreen() {
         currentState = GameState.GAME_OVER;
         int distance = (int) (distanceTraveled / PIXELS_PER_METER);
@@ -279,7 +267,7 @@ public class GameMain extends Application {
         gameOverMenu.show(distance, secondsSurvived);
     }
 
-    // Switches to the level-complete screen and shows the final run stats.
+    // Switches to the level-complete screen and shows the final run status.
     private void showLevelCompleteScreen() {
         currentState = GameState.LEVEL_COMPLETE;
         int distance = (int) (distanceTraveled / PIXELS_PER_METER);

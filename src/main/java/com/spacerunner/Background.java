@@ -11,7 +11,7 @@ import javafx.scene.shape.Rectangle;
 // copies side by side that swap around, so the scroll looks endless.
 public class Background {
 
-    private static final double PARALLAX_FACTOR = 0.2; // stars move slower than the floor, to fake depth
+    private static final double PARALLAX_FACTOR = 0.2; 
 
     private final ImageView starsA;
     private final ImageView starsB;

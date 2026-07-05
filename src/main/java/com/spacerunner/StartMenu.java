@@ -35,7 +35,6 @@ public class StartMenu extends VBox {
 
         getChildren().addAll(title, instructions);
 
-        // One button per level, wired to call back into GameMain with the chosen index.
         for (int i = 0; i < LevelData.NAMES.length; i++) {
             final int levelIndex = i;
             Button levelBtn = new Button(LevelData.NAMES[i]);

@@ -11,7 +11,7 @@ public abstract class GameObject {
 
     protected double x;
     protected double y;
-    protected Node view; // the actual JavaFX shape/image shown on screen
+    protected Node view; 
 
     // The hitbox used for collisions is usually smaller than the picture
     // itself (so a big meteor image doesn't kill you just by grazing its

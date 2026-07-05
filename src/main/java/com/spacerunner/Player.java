@@ -14,17 +14,14 @@ import javafx.util.Duration;
 // early press near landing isn't dropped, and a squash/stretch pulse.
 public class Player extends GameObject {
 
-    private static final double GRAVITY = 2200;             // px/s^2 while rising
+    private static final double GRAVITY = 2200;             
     private static final double FALL_GRAVITY_MULTIPLIER = 1.35; // extra gravity while falling, for a snappier arc
-    private static final double JUMP_VELOCITY = -780;        // px/s
-    private static final double MAX_FALL_SPEED = 1400;       // px/s, terminal velocity
+    private static final double JUMP_VELOCITY = -780;        
+    private static final double MAX_FALL_SPEED = 1400;       
     private static final double LEVEL_LERP_SPEED = 12.0;     // how quickly the ship levels out after landing
     private static final double COYOTE_TIME = 0.12;          // grace period after leaving a platform edge
-    private static final double JUMP_BUFFER_TIME = 0.12;     // how long an early jump press is remembered
+    private static final double JUMP_BUFFER_TIME = 0.12;  
 
-    // Flappy-bird style tilt: rotation continuously follows vertical
-    // velocity instead of spinning at a constant rate - nose pitches up
-    // sharply on a flap and dives nose-down as the fall speeds up.
     private static final double RISE_TILT_DEGREES = -25;
     private static final double FALL_TILT_DEGREES = 80;
 
@@ -39,7 +36,7 @@ public class Player extends GameObject {
 
     private double coyoteTimer = 0;
     private double jumpBufferTimer = 0;
-    private double gravityScale = 1.0; // lets each level tune how heavy the ship feels
+    private double gravityScale = 1.0; 
 
     private ImageView imageView;
 
@@ -213,7 +210,7 @@ public class Player extends GameObject {
     public double getYVelocity() { return yVelocity; }
 
     // Lets each level tune how heavy the ship feels (e.g. a lighter,
-    // floatier gravity on an ice level vs. a harsher pull on a wasteland).
+    // floatier gravity on an easy level vs. a harsher pull on a difficult one).
     public void setGravityScale(double gravityScale) {
         this.gravityScale = gravityScale;
     }

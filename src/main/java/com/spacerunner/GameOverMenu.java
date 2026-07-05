@@ -22,11 +22,11 @@ public class GameOverMenu extends VBox {
         setPrefSize(width, height);
 
         setStyle("-fx-background-color: rgba(0, 0, 0, 0.85);");
-        setVisible(false); // hidden by default
+        setVisible(false); 
 
         Text title = new Text("MISSION FAILED");
         title.setFont(Font.font("Consolas", 60));
-        title.setFill(Color.web("#ff4444")); // A realistic error-red color
+        title.setFill(Color.web("#ff4444")); 
 
         gameOverStats = new Text("");
         gameOverStats.setFont(Font.font("Consolas", 30));
@@ -56,7 +56,7 @@ public class GameOverMenu extends VBox {
         getChildren().addAll(title, gameOverStats, gameOverMessage, restartBtn);
     }
 
-    // Fills in the stats and picks a message based on how long the run lasted, then shows the menu.
+    // Fills in the status and picks a message based on how long the run lasted, then shows the menu.
     public void show(int distance, int secondsSurvived) {
         gameOverStats.setText("TOTAL DISTANCE: " + distance + "m");
 
