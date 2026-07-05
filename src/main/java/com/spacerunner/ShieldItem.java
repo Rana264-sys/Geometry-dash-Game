@@ -1,38 +1,35 @@
 package com.spacerunner;
 
+import javafx.scene.effect.Glow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class Block extends Obstacle {
-    
-    private final double VISUAL_WIDTH = 450;
-    private final double VISUAL_HEIGHT = 300;
-    private final double HITBOX_SIZE = 40;
+public class ShieldItem extends Obstacle {
 
-    public Block(double x, double y) {
+    private final double VISUAL_WIDTH = 90;
+    private final double VISUAL_HEIGHT = 90;
+    private final double HITBOX_SIZE = 30;
+    public ShieldItem(double x, double y) {
         super(x, y);
-        Image img = new Image(getClass().getResourceAsStream("/assets/asteroid.png"));
+
+        Image img = new Image(getClass().getResourceAsStream("/assets/shield.png"));
         ImageView imageView = new ImageView(img);
         imageView.setFitWidth(VISUAL_WIDTH);
         imageView.setFitHeight(VISUAL_HEIGHT);
-        
+        imageView.setEffect(new Glow(0.5));
+
         this.view = imageView;
         this.view.setTranslateX(x);
-        
-        this.view.setTranslateY(y - HITBOX_SIZE - (((VISUAL_HEIGHT - HITBOX_SIZE) / 2)-20)); 
+        this.view.setTranslateY((y - 120) - ((VISUAL_HEIGHT - HITBOX_SIZE) / 2));
 
         this.visualWidth = VISUAL_WIDTH;
         this.visualHeight = VISUAL_HEIGHT;
         this.hitboxSize = HITBOX_SIZE;
     }
-
     @Override
     public CollisionResult checkCollision(Player player) {
         if (this.getBounds().intersects(player.getBounds())) {
-            if (player.getYVelocity() > 0 && player.getBounds().getMaxY() <= this.getBounds().getMinY() + 15) {
-                return CollisionResult.PLATFORM;
-            }
-            return CollisionResult.DEATH;
+            return CollisionResult.SHIELD;
         }
         return CollisionResult.NONE;
     }

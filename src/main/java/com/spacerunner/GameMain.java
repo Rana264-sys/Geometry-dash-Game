@@ -4,13 +4,9 @@ import javafx.animation.AnimationTimer;
 import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.effect.Glow;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.ImagePattern;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -18,83 +14,85 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-// The main class that runs the game. It builds the screen, runs the game
-// loop, reads keyboard input, and handles collisions between the player
-// and obstacles. It uses HUD, StartMenu, GameOverMenu, and ObstacleSpawner
-// to keep those parts organized separately.
-//
-// How to play: press ENTER to start, SPACE or UP to jump, avoid asteroids
-// and spikes, and collect oxygen hearts for extra lives.
+
 public class GameMain extends Application {
 
     private static final int WIDTH = 800;
     private static final int HEIGHT = 600;
     private final double FLOOR_Y = 500;
 
+    private static final double NITRO_DURATION_SECONDS = 3.0;
+    private static final double NITRO_MULTIPLIER = 1.6;
+    private static final double MAX_DELTA_TIME = 0.05; // can't skip the player through a wall
+
     private Player player;
     private List<Obstacle> activeObstacles = new ArrayList<>();
     private Pane root;
     private AnimationTimer gameLoop;
+    private Background background;
+    private long lastNanoTime = -1;
 
-    // Game State
     private GameState currentState = GameState.MENU;
-    private int frameCount = 0; // counts frames since the run started
+    private double elapsedSeconds = 0;
 
-    // Hearts tracking
-    private int hearts = 0;
-    private final int MAX_HEARTS = 3;
+    private int shields = 0;
+    private final int MAX_SHIELDS = 3;
 
-    // The other classes GameMain relies on
-    private ObstacleSpawner spawner;
+    private boolean nitroActive = false;
+    private double nitroSecondsLeft = 0;
+
+    private int currentLevelIndex = 0;
+    private Level currentLevel;
+
     private HUD hud;
     private StartMenu startMenu;
     private GameOverMenu gameOverMenu;
+    private LevelCompleteMenu levelCompleteMenu;
 
-    // Builds everything on screen and starts the game loop.
     @Override
     public void start(Stage primaryStage) {
         root = new Pane();
         Scene scene = new Scene(root, WIDTH, HEIGHT);
 
-        // --- 1. SETUP DEEP SPACE BACKGROUND ---
-        Image bgImage = new Image(getClass().getResourceAsStream("/assets/space_bg.jpg"));
-        ImageView bgView = new ImageView(bgImage);
-        bgView.setFitWidth(WIDTH);
-        bgView.setFitHeight(HEIGHT);
-        bgView.setPreserveRatio(false);
-
-        // --- 2. SETUP MOON FLOOR ---
-        Rectangle floor = new Rectangle(0, FLOOR_Y, WIDTH, HEIGHT - FLOOR_Y);
-        Image floorTexture = new Image(getClass().getResourceAsStream("/assets/moon_floor.png"));
-        floor.setFill(new ImagePattern(floorTexture, 0, 0, 1, 1, true));
-        floor.setStroke(Color.web("#505254"));
-        floor.setStrokeWidth(3);
+        background = new Background(WIDTH, HEIGHT, FLOOR_Y);
 
         player = new Player(100, FLOOR_Y - 40);
 
-        // --- 3. SETUP COLLABORATORS (HUD, menus, spawner) ---
-        spawner = new ObstacleSpawner(WIDTH, FLOOR_Y);
         hud = new HUD(WIDTH);
-        startMenu = new StartMenu(WIDTH, HEIGHT, () -> {
-            currentState = GameState.PLAYING;
-            System.out.println("State Changed: PLAYING");
-        });
-        
-        gameOverMenu = new GameOverMenu(WIDTH, HEIGHT, this::restartGame);
+        startMenu = new StartMenu(WIDTH, HEIGHT, this::loadLevel);
+        gameOverMenu = new GameOverMenu(WIDTH, HEIGHT, this::restartLevel);
+        levelCompleteMenu = new LevelCompleteMenu(WIDTH, HEIGHT, this::goToNextLevel, this::showLevelSelect);
 
         root.getChildren().addAll(
-            bgView, floor, player.getView(),
-            hud.getScoreText(), hud.getLifeBox(),
-            startMenu, gameOverMenu
+            background.getStarsA(), background.getStarsB(),
+            background.getFloorA(), background.getFloorB(),
+            background.getStarsOverlay(), background.getFloorOverlay(), background.getFloorBorder(),
+            player.getView(),
+            hud.getScoreText(), hud.getLifeBox(), hud.getNitroActiveText(), hud.getNitroReadyText(),
+            hud.getDoubleJumpText(), hud.getMenuButton(),
+            startMenu, gameOverMenu, levelCompleteMenu
         );
+
+        hud.getMenuButton().setOnMouseClicked(event -> {
+            if (currentState == GameState.PLAYING) {
+                showLevelSelect();
+            }
+        });
 
         scene.setOnKeyPressed(event -> handleInput(event.getCode()));
 
         gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
+                if (lastNanoTime < 0) {
+                    lastNanoTime = now;
+                    return;
+                }
+                double deltaTime = Math.min((now - lastNanoTime) / 1_000_000_000.0, MAX_DELTA_TIME);
+                lastNanoTime = now;
+
                 if (currentState == GameState.PLAYING) {
-                    updateGame();
+                    updateGame(deltaTime);
                 }
             }
         };
@@ -106,78 +104,115 @@ public class GameMain extends Application {
         primaryStage.setResizable(false);
         primaryStage.show();
 
-        System.out.println("Game Loaded. State: MENU. Press ENTER to start.");
+        System.out.println("Game Loaded. State: MENU. Pick a level to start.");
     }
 
-    // Runs one frame of gameplay: moves the player, updates the score,
-    // increases difficulty, spawns obstacles, and checks collisions.
-    private void updateGame() {
-        player.update();
-        frameCount++;
-        hud.updateDistance(frameCount);
-        spawner.updateDifficulty(frameCount);
-        handleSpawning();
-        handleObstacles();
+
+    private void updateGame(double deltaTime) {
+        updateNitro(deltaTime);
+        double effectiveSpeed = nitroActive ? currentLevel.getSpeed() * NITRO_MULTIPLIER : currentLevel.getSpeed();
+
+        player.update(deltaTime);
+        elapsedSeconds += deltaTime;
+        hud.updateDistance(elapsedSeconds);
+        background.update(effectiveSpeed * deltaTime);
+        handleSpawning(effectiveSpeed);
+        handleObstacles(effectiveSpeed, deltaTime);
+
+        if (currentLevel.isComplete(elapsedSeconds, activeObstacles.isEmpty())) {
+            showLevelCompleteScreen();
+        }
     }
 
-    // --- HELPER METHODS ---
 
-    // Reacts to a key press depending on which screen the game is on.
     private void handleInput(KeyCode code) {
-        if (currentState == GameState.MENU) {
-            if (code == KeyCode.ENTER) {
-                currentState = GameState.PLAYING;
-                System.out.println("State Changed: PLAYING");
+        if (currentState != GameState.PLAYING) {
+            return;
+        }
+        if (code == KeyCode.SPACE || code == KeyCode.UP) {
+            player.jump();
+            hud.updateDoubleJump(player.hasDoubleJumpCharge());
+        } else if (code == KeyCode.SHIFT) {
+            if (!nitroActive && player.consumeNitroCharge()) {
+                activateNitro();
+                hud.updateNitroReady(player.getNitroCharges());
             }
-        } else if (currentState == GameState.PLAYING) {
-            if (code == KeyCode.SPACE || code == KeyCode.UP) {
-                player.jump();
-            }
-        } else if (currentState == GameState.GAME_OVER) {
-            if (code == KeyCode.ENTER) {
-                System.out.println("Restart logic coming soon!");
+        } else if (code == KeyCode.ESCAPE) {
+            showLevelSelect();
+        }
+    }
+
+    private void updateNitro(double deltaTime) {
+        if (nitroActive) {
+            nitroSecondsLeft -= deltaTime;
+            if (nitroSecondsLeft <= 0) {
+                nitroActive = false;
+                player.getView().setEffect(null);
+                hud.updateNitroActive(false);
             }
         }
     }
 
-    // Asks the spawner if new obstacles should appear, and adds them
-    // to the game if so.
-    private void handleSpawning() {
-        List<Obstacle> newSpawns = spawner.trySpawn(frameCount);
+    private void activateNitro() {
+        nitroActive = true;
+        nitroSecondsLeft = NITRO_DURATION_SECONDS;
+        player.getView().setEffect(new Glow(0.8));
+        hud.updateNitroActive(true);
+    }
+
+    private void handleSpawning(double effectiveSpeed) {
+        List<Obstacle> newSpawns = currentLevel.trySpawn(elapsedSeconds, WIDTH, FLOOR_Y);
         for (Obstacle obs : newSpawns) {
+            obs.setXVelocity(effectiveSpeed);
             activeObstacles.add(obs);
             root.getChildren().add(obs.getView());
         }
     }
 
-    // Moves every obstacle and checks if it touched the player, then
-    // reacts based on what kind of collision happened.
-    private void handleObstacles() {
+
+    private void handleObstacles(double effectiveSpeed, double deltaTime) {
         Iterator<Obstacle> iter = activeObstacles.iterator();
         while (iter.hasNext()) {
             Obstacle obs = iter.next();
-            obs.update();
+            obs.setXVelocity(effectiveSpeed);
+            obs.update(deltaTime);
 
             CollisionResult collision = obs.checkCollision(player);
 
             switch (collision) {
-                case HEART:
-                    if (hearts < MAX_HEARTS) {
-                        hearts++;
-                        hud.updateLives(hearts);
-                        System.out.println("⭐ Oxygen Collected! Total Extra Lives: " + hearts);
+                case SHIELD:
+                    if (shields < MAX_SHIELDS) {
+                        shields++;
+                        hud.updateShields(shields);
+                        System.out.println("Shield Collected! Shields: " + shields);
                     }
                     root.getChildren().remove(obs.getView());
                     iter.remove();
                     break;
 
-                case DEATH:
-                    if (hearts > 0) {
-                        hearts--;
-                        hud.updateLives(hearts);
-                        System.out.println("🛡️ Oxygen depleted! Lives left: " + hearts);
+                case NITRO:
+                    player.grantNitroCharge();
+                    hud.updateNitroReady(player.getNitroCharges());
+                    System.out.println("Nitro charge collected!");
+                    root.getChildren().remove(obs.getView());
+                    iter.remove();
+                    break;
 
-                        // Add a brief visual feedback
+                case DOUBLE_JUMP:
+                    player.grantDoubleJump();
+                    hud.updateDoubleJump(true);
+                    System.out.println("Double Jump charge collected!");
+                    root.getChildren().remove(obs.getView());
+                    iter.remove();
+                    break;
+
+                case DEATH:
+                    if (shields > 0) {
+                        shields--;
+                        hud.updateShields(shields);
+                        System.out.println("Shield absorbed the hit! Shields left: " + shields);
+
+                        // visual feedback
                         player.getView().setOpacity(0.5);
                         PauseTransition pause = new PauseTransition(Duration.seconds(0.5));
                         pause.setOnFinished(e -> player.getView().setOpacity(1.0));
@@ -186,7 +221,7 @@ public class GameMain extends Application {
                         root.getChildren().remove(obs.getView());
                         iter.remove();
                     } else {
-                        System.out.println("💀 GAME OVER! You survived for " + (frameCount / 60) + " seconds.");
+                        System.out.println("GAME OVER! You survived for " + (int) elapsedSeconds + " seconds.");
                         showGameOverScreen();
                     }
                     break;
@@ -197,7 +232,7 @@ public class GameMain extends Application {
 
                 case NONE:
                 default:
-                    // No collision this frame - nothing to do.
+                    // No collision this frame
                     break;
             }
 
@@ -209,42 +244,75 @@ public class GameMain extends Application {
         }
     }
 
-    // Switches to the game-over screen and shows the final stats.
     private void showGameOverScreen() {
         currentState = GameState.GAME_OVER;
-        int distance = frameCount / 10;
-        int secondsSurvived = frameCount / 60;
+        int distance = (int) (elapsedSeconds * 6);
+        int secondsSurvived = (int) elapsedSeconds;
         gameOverMenu.show(distance, secondsSurvived);
     }
 
-    // Resets everything back to the start so the player can play again.
-    private void restartGame() {
-        // Reset time and difficulty via the spawner
-        frameCount = 0;
-        spawner.reset();
+    private void showLevelCompleteScreen() {
+        currentState = GameState.LEVEL_COMPLETE;
+        int distance = (int) (elapsedSeconds * 6);
+        int secondsSurvived = (int) elapsedSeconds;
+        boolean hasNextLevel = currentLevelIndex + 1 < LevelData.NAMES.length;
+        levelCompleteMenu.show(currentLevel.getName(), distance, secondsSurvived, hasNextLevel);
+    }
 
-        // Reset hearts
-        hearts = 0;
+    private void loadLevel(int levelIndex) {
+        currentLevelIndex = levelIndex;
+        currentLevel = LevelData.get(levelIndex);
+        background.setTheme(
+            currentLevel.getStarsColor(), currentLevel.getStarsIntensity(),
+            currentLevel.getFloorColor(), currentLevel.getFloorIntensity()
+        );
 
-        // Reset player position
-        player.getView().setTranslateY(FLOOR_Y - 40);
+        elapsedSeconds = 0;
+        shields = 0;
+        nitroActive = false;
+        nitroSecondsLeft = 0;
 
-        // Clear all obstacles
+        player.getView().setEffect(null);
+        player.getView().setOpacity(1.0);
+        player.reset(FLOOR_Y - 40);
+        player.setGravityScale(currentLevel.getGravityMultiplier());
+
         for (Obstacle obs : activeObstacles) {
             root.getChildren().remove(obs.getView());
         }
         activeObstacles.clear();
 
-        // Update UI
-        hud.updateLives(hearts);
         hud.reset();
-        gameOverMenu.hide();
+        hud.updateShields(shields);
+        hud.updateNitroActive(false);
+        hud.updateNitroReady(0);
+        hud.updateDoubleJump(false);
 
-        // Resume game
+        gameOverMenu.hide();
+        levelCompleteMenu.hide();
+        startMenu.setVisible(false);
+
         currentState = GameState.PLAYING;
+        System.out.println("State Changed: PLAYING (" + currentLevel.getName() + ")");
     }
 
-    // The real starting point of the program (see Launcher.java too).
+    private void restartLevel() {
+        loadLevel(currentLevelIndex);
+    }
+    private void goToNextLevel() {
+        if (currentLevelIndex + 1 < LevelData.NAMES.length) {
+            loadLevel(currentLevelIndex + 1);
+        } else {
+            showLevelSelect();
+        }
+    }
+    private void showLevelSelect() {
+        currentState = GameState.MENU;
+        gameOverMenu.hide();
+        levelCompleteMenu.hide();
+        startMenu.setVisible(true);
+    }
+
     public static void main(String[] args) {
         launch(args);
     }

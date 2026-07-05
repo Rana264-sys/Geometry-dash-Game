@@ -8,52 +8,50 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 
-// The start screen shown before the game begins. It shows the title,
-// instructions, and a button to start playing.
+import java.util.function.IntConsumer;
+
 public class StartMenu extends VBox {
 
-    // Builds the start screen. onStart runs when the player clicks the button.
-    public StartMenu(int width, int height, Runnable onStart) {
-        super(30); // 30 pixels of spacing between elements
+    public StartMenu(int width, int height, IntConsumer onSelectLevel) {
+        super(12);
         setAlignment(Pos.CENTER);
         setPrefSize(width, height);
 
-        // Semi-transparent black background overlay
         setStyle("-fx-background-color: rgba(0, 0, 0, 0.75);");
 
-        // Title
         Text title = new Text("SPACE RUNNER");
-        title.setFont(Font.font("Consolas", 60));
+        title.setFont(Font.font("Consolas", 48));
         title.setFill(Color.WHITE);
 
-        // Instructions
-        Text instructions = new Text("MISSION BRIEFING:\n\nPress SPACE to fire thrusters.\nCollect Oxygen to survive.\nAvoid incoming space debris.");
-        instructions.setFont(Font.font("Consolas", 20));
+        Text instructions = new Text(
+            "SPACE / UP to fire thrusters. Collect a Shield to absorb the next hit.\n" +
+            "Collect Nitro and press SHIFT for a speed boost. Grab the double-jump icon for an extra jump. Choose a mission:"
+        );
+        instructions.setFont(Font.font("Consolas", 15));
         instructions.setFill(Color.LIGHTGRAY);
         instructions.setTextAlignment(TextAlignment.CENTER);
 
-        // Minimalist Ghost Button
-        Button startBtn = new Button("START LAUNCH");
-        startBtn.setFont(Font.font("Consolas", 24));
-        startBtn.setStyle(
-            "-fx-background-color: transparent; " +
-            "-fx-text-fill: white; " +
-            "-fx-border-color: white; " +
-            "-fx-border-width: 2px; " +
-            "-fx-padding: 10px 30px; " +
-            "-fx-cursor: hand;"
-        );
+        getChildren().addAll(title, instructions);
 
-        // Button Hover Effect
-        startBtn.setOnMouseEntered(e -> startBtn.setStyle("-fx-background-color: white; -fx-text-fill: black; -fx-padding: 10px 30px; -fx-cursor: hand;"));
-        startBtn.setOnMouseExited(e -> startBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-width: 2px; -fx-padding: 10px 30px; -fx-cursor: hand;"));
+        for (int i = 0; i < LevelData.NAMES.length; i++) {
+            final int levelIndex = i;
+            Button levelBtn = new Button(LevelData.NAMES[i]);
+            styleButton(levelBtn);
+            levelBtn.setOnAction(e -> {
+                this.setVisible(false);
+                onSelectLevel.accept(levelIndex);
+            });
+            getChildren().add(levelBtn);
+        }
+    }
 
-        // When clicked: hide this menu and tell GameMain to start playing.
-        startBtn.setOnAction(e -> {
-            this.setVisible(false);
-            onStart.run();
-        });
-
-        getChildren().addAll(title, instructions, startBtn);
+    private void styleButton(Button btn) {
+        btn.setFont(Font.font("Consolas", 18));
+        String base = "-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; " +
+            "-fx-border-width: 2px; -fx-padding: 8px 24px; -fx-cursor: hand;";
+        String hover = "-fx-background-color: white; -fx-text-fill: black; -fx-padding: 8px 24px; -fx-cursor: hand;";
+        btn.setStyle(base);
+        btn.setOnMouseEntered(e -> btn.setStyle(hover));
+        btn.setOnMouseExited(e -> btn.setStyle(base));
     }
 }

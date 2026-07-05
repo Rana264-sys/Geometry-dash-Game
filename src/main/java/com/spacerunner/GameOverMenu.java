@@ -8,35 +8,28 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 
-// The "mission failed" screen shown after the player dies. Shows the
-// final distance, a message based on how long they survived, and a
-// restart button.
+
 public class GameOverMenu extends VBox {
 
     private final Text gameOverStats;
     private final Text gameOverMessage;
 
-    // Builds the game-over screen. onRestart runs when the player clicks the button.
     public GameOverMenu(int width, int height, Runnable onRestart) {
         super(25);
         setAlignment(Pos.CENTER);
         setPrefSize(width, height);
 
-        // Darker overlay to emphasize the end state
         setStyle("-fx-background-color: rgba(0, 0, 0, 0.85);");
-        setVisible(false); // Hidden by default
+        setVisible(false); // hidden by default
 
-        // Title
         Text title = new Text("MISSION FAILED");
         title.setFont(Font.font("Consolas", 60));
         title.setFill(Color.web("#ff4444")); // A realistic error-red color
 
-        // Dynamic Stats (Distance)
         gameOverStats = new Text("");
         gameOverStats.setFont(Font.font("Consolas", 30));
         gameOverStats.setFill(Color.WHITE);
 
-        // Dynamic Encouragement Message
         gameOverMessage = new Text("");
         gameOverMessage.setFont(Font.font("Consolas", 20));
         gameOverMessage.setFill(Color.LIGHTGRAY);
@@ -56,32 +49,25 @@ public class GameOverMenu extends VBox {
 
         restartBtn.setOnMouseEntered(e -> restartBtn.setStyle("-fx-background-color: white; -fx-text-fill: black; -fx-padding: 10px 30px; -fx-cursor: hand;"));
         restartBtn.setOnMouseExited(e -> restartBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-width: 2px; -fx-padding: 10px 30px; -fx-cursor: hand;"));
-
-        // Restart Logic
         restartBtn.setOnAction(e -> onRestart.run());
 
         getChildren().addAll(title, gameOverStats, gameOverMessage, restartBtn);
     }
 
-    // Fills in the distance and message, then shows this screen.
     public void show(int distance, int secondsSurvived) {
         gameOverStats.setText("TOTAL DISTANCE: " + distance + "m");
 
         if (secondsSurvived < 15) {
-            // Easy Phase Failure (Under 15 seconds)
             gameOverMessage.setText("CATASTROPHIC LAUNCH FAILURE.\nCalibrate your thrusters and try harder.");
         } else if (secondsSurvived < 45) {
-            // Middle Phase Failure (15 to 45 seconds)
             gameOverMessage.setText("NAVIGATION LOST.\nYou reached the outer belt, but space is unforgiving.");
         } else {
-            // Difficult Phase + 20 seconds (Over 45 seconds total)
             gameOverMessage.setText("OUTSTANDING ENDURANCE.\nThe agency is highly impressed with your survival skills.");
         }
 
         setVisible(true);
     }
 
-    // Hides this screen (used when restarting).
     public void hide() {
         setVisible(false);
     }
